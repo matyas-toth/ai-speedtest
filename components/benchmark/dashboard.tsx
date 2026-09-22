@@ -20,7 +20,6 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
-  CardFooter,
 } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import {
@@ -56,6 +55,7 @@ import {
   type EmbeddingSample,
 } from "@/lib/benchmark"
 import { Methodology } from "./methodology"
+import { BenchmarkGauge } from "./benchmark-gauge"
 
 const format = (value: number | null | undefined, digits = 1) =>
   value == null
@@ -77,6 +77,7 @@ function download(result: Result) {
 
 export function Dashboard({ children }: { children?: React.ReactNode }) {
   const test = useBenchmark()
+  const [runKey, setRunKey] = useState(0)
   const [repetitions, setRepetitions] = useState("3")
   const [tab, setTab] = useState("benchmark")
   const [selected, setSelected] = useState<Result | null>(null)
@@ -87,6 +88,7 @@ export function Dashboard({ children }: { children?: React.ReactNode }) {
   const embeddings = selected?.embeddings || test.embeddings
   const start = () => {
     setSelected(null)
+    setRunKey((key) => key + 1)
     test.start(Number(repetitions))
   }
   const metrics = [
@@ -130,6 +132,13 @@ export function Dashboard({ children }: { children?: React.ReactNode }) {
           AI Speedtest
         </Link>
         <div className="flex items-center gap-3">
+          <Badge variant="outline">
+            {test.device === null
+              ? "Checking WebGPU..."
+              : test.device.available
+                ? "WebGPU available"
+                : "WebGPU unavailable"}
+          </Badge>
           <Button
             variant="ghost"
             size="icon"
@@ -145,30 +154,8 @@ export function Dashboard({ children }: { children?: React.ReactNode }) {
       <Separator />
       <main
         id="main-content"
-        className="mx-auto flex max-w-7xl flex-col gap-8 px-5 py-10 sm:px-8 sm:py-12"
+        className="mx-auto flex max-w-7xl flex-col gap-8 px-5 py-6 sm:px-8 sm:py-7"
       >
-        <section className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
-          <div className="flex max-w-2xl flex-col gap-3">
-            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-              How fast is your PC at AI?
-            </h1>
-            <p className="max-w-xl text-base leading-relaxed text-muted-foreground">
-              A free local AI speed test for your PC. Measure LLM tokens per
-              second, prompt processing, and embeddings with real models running
-              in your browser.
-            </p>
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <Badge variant="outline">
-              {test.device === null
-                ? "Checking WebGPU…"
-                : test.device.available
-                  ? "WebGPU available"
-                  : "WebGPU unavailable"}
-            </Badge>
-          </div>
-        </section>
-
         <Tabs
           value={tab}
           onValueChange={(value) => setTab(String(value))}
@@ -192,7 +179,7 @@ export function Dashboard({ children }: { children?: React.ReactNode }) {
                 </AlertDescription>
               </Alert>
             ) : null}
-            {test.error ? (
+            {test.error && !selected ? (
               <Alert variant="destructive">
                 <AlertTitle>Benchmark interrupted</AlertTitle>
                 <AlertDescription className="break-words">
@@ -204,7 +191,7 @@ export function Dashboard({ children }: { children?: React.ReactNode }) {
                 </AlertDescription>
               </Alert>
             ) : null}
-            {test.notice ? (
+            {test.notice && !selected ? (
               <Alert>
                 <AlertTitle>Run information</AlertTitle>
                 <AlertDescription>{test.notice}</AlertDescription>
@@ -234,173 +221,264 @@ export function Dashboard({ children }: { children?: React.ReactNode }) {
                 </AlertDescription>
               </Alert>
             ) : null}
-            <div className="grid gap-6 lg:grid-cols-[1.65fr_1fr]">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between gap-3">
-                    <CardTitle>
+            <section className="grid items-center gap-8 py-3 lg:grid-cols-[0.9fr_1.35fr_0.9fr] lg:gap-5 lg:py-2">
+              <div className="flex flex-col gap-4 text-center lg:text-left">
+
+                <h1 className="text-3xl leading-[1.12] font-semibold tracking-tight text-balance sm:text-4xl">
+                  How fast is
+                  <br className="hidden lg:block" /> your PC at AI?
+                </h1>
+                <p className="mx-auto max-w-xs text-sm leading-relaxed text-muted-foreground lg:mx-0">
+                  Measure your PC&apos;s real-world AI performance. Everything runs
+                  locally in your browser.
+                </p>
+              </div>
+              <div className="flex min-w-0 flex-col items-center gap-6">
+                <BenchmarkGauge
+                  key={selected?.id ?? runKey}
+                  llm={llm}
+                  embeddings={embeddings}
+                  score={shown?.score}
+                  busy={test.busy}
+                  repetitions={shown?.repetitions ?? Number(repetitions)}
+                  saved={!!selected}
+                  status={selected ? "Saved benchmark" : test.status}
+                />
+                <div className="flex min-h-12 items-center justify-center">
+                  {test.busy ? (
+                    <Button variant="destructive" onClick={test.cancel}>
+                      <HugeiconsIcon icon={StopIcon} data-icon="inline-start" />
+                      Cancel run
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={start}
+                      disabled={!test.device?.available}
+                      size="lg"
+                      className="h-12 min-w-48"
+                    >
+                      <HugeiconsIcon icon={PlayIcon} data-icon="inline-start" />
+                      {shown ? "Run again" : "Start benchmark"}
+                      <HugeiconsIcon
+                        icon={ArrowRight01Icon}
+                        data-icon="inline-end"
+                      />
+                    </Button>
+                  )}
+                </div>
+                <p className="text-center text-xs text-muted-foreground">
+                  {test.busy
+                    ? `${Math.floor(test.elapsed / 60)}:${String(test.elapsed % 60).padStart(2, "0")} elapsed · keep this tab in focus`
+                    : "No sign-up. No data leaves your device."}
+                </p>
+              </div>
+              <div className="flex flex-col gap-6 rounded-2xl border border-border/70 p-5">
+                <div className="flex items-center justify-between gap-2">
+                  <h2 className="text-sm font-semibold">Your AI benchmark</h2>
+                  <Badge variant="secondary">
+                    {test.busy ? "Running" : shown ? "Completed" : "Ready"}
+                  </Badge>
+                </div>
+                <div className="flex flex-col gap-4">
+                  <Fact label="Language model" value="SmolLM2 · 360M" />
+                  <Fact label="Embedding model" value="Arctic Embed · 33M" />
+                  <Fact label="Execution" value="Local WebGPU" />
+                </div>
+                <Separator />
+                <div className="flex flex-col gap-3">
+                  <div className="flex justify-between text-xs">
+                    <span>
                       {test.busy
-                        ? "Benchmark in progress"
-                        : "Your AI benchmark"}
-                    </CardTitle>
+                        ? "Preparing & measuring"
+                        : shown
+                          ? "Measurements complete"
+                          : "Benchmark length"}
+                    </span>
+                    <span className="text-muted-foreground tabular-nums">
+                      {test.busy
+                        ? `${Math.round(test.progress)}%`
+                        : shown
+                          ? `${shown.repetitions} / ${shown.repetitions} passes`
+                          : ""}
+                    </span>
                   </div>
-                </CardHeader>
-                <CardContent className="flex flex-col gap-6">
-                  <div className="grid gap-4 sm:grid-cols-3">
-                    <Fact label="Language model" value="SmolLM2 · 360M" />
-                    <Fact label="Embedding model" value="Arctic Embed · 33M" />
-                    <Fact label="Execution" value="Local WebGPU" />
-                  </div>
-                  <Separator />
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center justify-between gap-4">
-                      <p className="text-sm font-medium">
-                        {test.busy
-                          ? "Preparing & measuring"
-                          : shown
-                            ? "Measurements ready"
-                            : "Ready to measure"}
-                      </p>
-                    </div>
+                  {test.busy || shown ? (
                     <Progress
-                      value={
-                        test.busy ? test.progress : shown ? 100 : test.progress
-                      }
+                      value={shown ? 100 : test.progress}
                       aria-label="Benchmark progress"
                     />
-                    <p
-                      role="status"
-                      className="min-h-10 text-xs leading-relaxed break-words text-muted-foreground"
-                    >
-                      {selected
-                        ? "Loaded from this browser’s local history."
-                        : test.status}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <Select
-                      value={repetitions}
-                      onValueChange={(value) => {
-                        if (value) setRepetitions(value)
-                      }}
-                      disabled={test.busy}
-                      items={[
-                        { value: "3", label: "Standard · 3 passes" },
-                        { value: "5", label: "Extended · 5 passes" },
-                      ]}
-                    >
-                      <SelectTrigger aria-label="Benchmark repetitions">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectItem value="3">Standard · 3 passes</SelectItem>
-                          <SelectItem value="5">Extended · 5 passes</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                    {test.busy ? (
-                      <Button variant="destructive" onClick={test.cancel}>
-                        <HugeiconsIcon
-                          icon={StopIcon}
-                          data-icon="inline-start"
-                        />
-                        Cancel run
-                      </Button>
-                    ) : (
-                      <Button
-                        onClick={start}
-                        disabled={!test.device?.available}
-                        size="lg"
-                      >
-                        <HugeiconsIcon
-                          icon={PlayIcon}
-                          data-icon="inline-start"
-                        />
-                        {test.result ? "Run again" : "Start benchmark"}
-                        <HugeiconsIcon
-                          icon={ArrowRight01Icon}
-                          data-icon="inline-end"
-                        />
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>AI score</CardTitle>
-                  <CardDescription>higher is faster</CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-1 flex-col justify-center gap-4">
-                  <div className="flex items-baseline gap-3">
-                    <span className="font-mono text-6xl font-medium tracking-tighter sm:text-7xl">
-                      {shown ? format(shown.score, 0) : "—"}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      points
-                    </span>
-                  </div>
-                  <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
-                    {shown
-                      ? "Weighted from the median throughput of all three workloads. Compare runs using the same suite."
-                      : "Your score appears after all workloads finish. Every point comes from measured inference."}
-                  </p>
-                </CardContent>
-                <CardFooter className="flex flex-wrap justify-between gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setTab("methodology")}
-                  >
-                    How scoring works
-                    <HugeiconsIcon
-                      icon={ArrowRight01Icon}
-                      data-icon="inline-end"
-                    />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={!shown}
-                    onClick={async () => {
-                      if (!shown) return
-                      try {
-                        await navigator.clipboard.writeText(
-                          JSON.stringify(shown, null, 2)
-                        )
-                        setExportFeedback("Result JSON copied to clipboard.")
-                      } catch {
-                        setExportFeedback(
-                          "Clipboard access was blocked. Use Export JSON to download the result."
-                        )
-                      }
-                    }}
-                  >
-                    Copy JSON
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={!shown}
-                    onClick={() => {
-                      if (shown) download(shown)
-                    }}
-                  >
-                    <HugeiconsIcon
-                      icon={Download01Icon}
-                      data-icon="inline-start"
-                    />
-                    Export JSON
-                  </Button>
+                  ) : null}
                   <p
-                    aria-live="polite"
-                    className="w-full text-xs text-muted-foreground"
+                    role="status"
+                    className="text-xs leading-relaxed break-words text-muted-foreground"
                   >
-                    {exportFeedback}
+                    {selected ? "Loaded from your local history." : test.status}
                   </p>
-                  {shown ? (
-                    <details className="w-full min-w-0">
+                  <Select
+                    value={repetitions}
+                    onValueChange={(value) => {
+                      if (value) setRepetitions(value)
+                    }}
+                    disabled={test.busy}
+                    items={[
+                      { value: "3", label: "Standard · 3 passes" },
+                      { value: "5", label: "Extended · 5 passes" },
+                    ]}
+                  >
+                    <SelectTrigger aria-label="Benchmark repetitions">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem value="3">Standard · 3 passes</SelectItem>
+                        <SelectItem value="5">Extended · 5 passes</SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </section>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {metrics.map((metric) => (
+                <div
+                  key={metric.title}
+                  className="flex flex-col gap-3 rounded-xl border border-border/70 p-5"
+                >
+                  <p className="text-sm text-muted-foreground">
+                    {metric.title}
+                  </p>
+                  <div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-mono text-3xl font-medium tracking-tight">
+                        {format(metric.value)}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        {metric.unit}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <details className="group rounded-xl border border-border/70">
+              <summary className="cursor-pointer p-5 text-sm font-medium">
+                Measurements & device details{" "}
+                <span className="ml-2 text-xs font-normal text-muted-foreground">
+                  Samples, environment and export
+                </span>
+              </summary>
+              <div className="flex flex-col gap-5 p-5 pt-0">
+                <div className="grid items-start gap-6 lg:grid-cols-[1.65fr_1fr]">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Measured passes</CardTitle>
+                      <CardDescription>
+                        {llm.length || embeddings.length
+                          ? "Raw samples behind the medians. Warm-up passes are excluded."
+                          : "Results populate here as each workload finishes."}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Samples llm={llm} embeddings={embeddings} />
+                      {embeddings.length ? (
+                        <p className="mt-4 text-xs text-muted-foreground">
+                          Embedding throughput:{" "}
+                          {format(
+                            mid(embeddings.map((s) => s.documentsPerSecond))
+                          )}{" "}
+                          docs/s · 384 dimensions · batch size 4
+                        </p>
+                      ) : null}
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Your environment</CardTitle>
+                      <CardDescription>
+                        Reported by{" "}
+                        {selected ? "the saved run’s browser" : "your browser"}.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex flex-col gap-4">
+                      <Fact
+                        label="GPU adapter"
+                        value={
+                          (selected?.device || test.device)?.gpu || "Detecting…"
+                        }
+                      />
+                      <Separator />
+                      <div className="grid grid-cols-2 gap-5">
+                        <Fact
+                          label="Logical processors"
+                          value={String(
+                            (selected?.device || test.device)?.threads || "—"
+                          )}
+                        />
+                        <Fact
+                          label="Reported memory"
+                          value={
+                            (selected?.device || test.device)?.memory
+                              ? `≈ ${(selected?.device || test.device)?.memory} GB`
+                              : "Not exposed"
+                          }
+                        />
+                        <Fact
+                          label="Storage buffer limit"
+                          value={
+                            (selected?.device || test.device)?.maxBufferMB
+                              ? `${(selected?.device || test.device)?.maxBufferMB} MB`
+                              : "—"
+                          }
+                        />
+                        <Fact
+                          label="Float16 support"
+                          value={
+                            (selected?.device || test.device)?.f16
+                              ? "Available"
+                              : test.device
+                                ? "Not exposed"
+                                : "Checking…"
+                          }
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+                {shown ? (
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => download(shown)}
+                    >
+                      <HugeiconsIcon
+                        icon={Download01Icon}
+                        data-icon="inline-start"
+                      />
+                      Export JSON
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(
+                            JSON.stringify(shown, null, 2)
+                          )
+                          setExportFeedback("Result JSON copied to clipboard.")
+                        } catch {
+                          setExportFeedback(
+                            "Clipboard access was blocked. Use Export JSON to download the result."
+                          )
+                        }
+                      }}
+                    >
+                      Copy JSON
+                    </Button>
+                    <p role="status" className="text-xs text-muted-foreground">
+                      {exportFeedback}
+                    </p>
+                    <details className="w-full">
                       <summary className="cursor-pointer text-xs text-muted-foreground">
                         Inspect raw JSON
                       </summary>
@@ -411,104 +489,10 @@ export function Dashboard({ children }: { children?: React.ReactNode }) {
                         {JSON.stringify(shown, null, 2)}
                       </pre>
                     </details>
-                  ) : null}
-                </CardFooter>
-              </Card>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {metrics.map((metric) => (
-                <Card key={metric.title} size="sm">
-                  <CardHeader>
-                    <CardTitle>{metric.title}</CardTitle>
-                    <CardDescription>{metric.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-baseline gap-2">
-                      <span className="font-mono text-3xl font-medium tracking-tight">
-                        {format(metric.value)}
-                      </span>
-                      <span className="text-sm text-muted-foreground">
-                        {metric.unit}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-            <div className="grid items-start gap-6 lg:grid-cols-[1.65fr_1fr]">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Measured passes</CardTitle>
-                  <CardDescription>
-                    {llm.length || embeddings.length
-                      ? "Raw samples behind the medians. Warm-up passes are excluded."
-                      : "Results populate here as each workload finishes."}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Samples llm={llm} embeddings={embeddings} />
-                  {embeddings.length ? (
-                    <p className="mt-4 text-xs text-muted-foreground">
-                      Embedding throughput:{" "}
-                      {format(mid(embeddings.map((s) => s.documentsPerSecond)))}{" "}
-                      docs/s · 384 dimensions · batch size 4
-                    </p>
-                  ) : null}
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Your environment</CardTitle>
-                  <CardDescription>
-                    Reported by{" "}
-                    {selected ? "the saved run’s browser" : "your browser"}.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-col gap-4">
-                  <Fact
-                    label="GPU adapter"
-                    value={
-                      (selected?.device || test.device)?.gpu || "Detecting…"
-                    }
-                  />
-                  <Separator />
-                  <div className="grid grid-cols-2 gap-5">
-                    <Fact
-                      label="Logical processors"
-                      value={String(
-                        (selected?.device || test.device)?.threads || "—"
-                      )}
-                    />
-                    <Fact
-                      label="Reported memory"
-                      value={
-                        (selected?.device || test.device)?.memory
-                          ? `≈ ${(selected?.device || test.device)?.memory} GB`
-                          : "Not exposed"
-                      }
-                    />
-                    <Fact
-                      label="Storage buffer limit"
-                      value={
-                        (selected?.device || test.device)?.maxBufferMB
-                          ? `${(selected?.device || test.device)?.maxBufferMB} MB`
-                          : "—"
-                      }
-                    />
-                    <Fact
-                      label="Float16 support"
-                      value={
-                        (selected?.device || test.device)?.f16
-                          ? "Available"
-                          : test.device
-                            ? "Not exposed"
-                            : "Checking…"
-                      }
-                    />
                   </div>
-                </CardContent>
-              </Card>
-            </div>
+                ) : null}
+              </div>
+            </details>
           </TabsContent>
           <TabsContent value="history" className="flex flex-col gap-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
@@ -589,7 +573,12 @@ export function Dashboard({ children }: { children?: React.ReactNode }) {
             <Methodology />
           </TabsContent>
         </Tabs>
-        {children}
+        <details className="mt-6 border-t pt-6">
+          <summary className="cursor-pointer text-sm text-muted-foreground">
+            About this benchmark
+          </summary>
+          <div className="pt-8">{children}</div>
+        </details>
       </main>
     </div>
   )

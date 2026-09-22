@@ -130,3 +130,20 @@
     @apply font-sans;
     }
 }
+@layer base {
+  :root {
+    --gauge-decode: oklch(0.52 0.22 295);
+    --gauge-embed: oklch(0.5 0.12 180);
+    --gauge-score: oklch(0.53 0.23 264);
+  }
+  .dark {
+    --gauge-decode: oklch(0.75 0.16 295);
+    --gauge-embed: oklch(0.76 0.13 180);
+    --gauge-score: oklch(0.7 0.17 264);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-testid="benchmark-gauge"] * {
+      transition-duration: 0ms !important;
+    }
+  }
+}
