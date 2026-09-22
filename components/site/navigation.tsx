@@ -9,7 +9,7 @@ import { PROTOCOL } from "@/lib/benchmark"
 export function SiteFooter() {
   return (
     <footer className="mt-auto">
-      <Separator />
+
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-5 py-6 sm:px-8">
         <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-3">
           <Button

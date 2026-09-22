@@ -126,13 +126,13 @@ export function Dashboard({ children }: { children?: React.ReactNode }) {
       <header className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-6 sm:px-8">
         <Link
           href="/"
-          className="flex items-center gap-2.5 font-semibold tracking-tight"
+          className="flex items-center gap-2.5 font-semibold tracking-tight text-xl"
         >
           <Image src="/brand/mark.svg" alt="" width={28} height={28} />
           AI Speedtest
         </Link>
         <div className="flex items-center gap-3">
-          <Badge variant="outline">
+          <Badge variant="outline" className="hidden md:inline">
             {test.device === null
               ? "Checking WebGPU..."
               : test.device.available
@@ -151,7 +151,7 @@ export function Dashboard({ children }: { children?: React.ReactNode }) {
           </Button>
         </div>
       </header>
-      <Separator />
+
       <main
         id="main-content"
         className="mx-auto flex max-w-7xl flex-col gap-8 px-5 py-6 sm:px-8 sm:py-7"
