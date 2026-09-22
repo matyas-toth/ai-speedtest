@@ -2,13 +2,13 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useTheme } from "next-themes"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   ArrowRight01Icon,
   Download01Icon,
   Moon02Icon,
-  CpuIcon,
   PlayIcon,
   StopIcon,
 } from "@hugeicons/core-free-icons"
@@ -51,7 +51,6 @@ import {
 import { useBenchmark } from "@/hooks/use-benchmark"
 import {
   median,
-  PROTOCOL,
   type Result,
   type Sample,
   type EmbeddingSample,
@@ -76,7 +75,7 @@ function download(result: Result) {
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
-export function Dashboard() {
+export function Dashboard({ children }: { children?: React.ReactNode }) {
   const test = useBenchmark()
   const [repetitions, setRepetitions] = useState("3")
   const [tab, setTab] = useState("benchmark")
@@ -121,17 +120,16 @@ export function Dashboard() {
     },
   ]
   return (
-    <div className="min-h-svh">
+    <div>
       <header className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-6 sm:px-8">
         <Link
           href="/"
           className="flex items-center gap-2.5 font-semibold tracking-tight"
         >
-          <HugeiconsIcon icon={CpuIcon} size={23} strokeWidth={1.7} />
+          <Image src="/brand/mark.svg" alt="" width={28} height={28} />
           AI Speedtest
         </Link>
         <div className="flex items-center gap-3">
-
           <Button
             variant="ghost"
             size="icon"
@@ -145,15 +143,19 @@ export function Dashboard() {
         </div>
       </header>
       <Separator />
-      <main className="mx-auto flex max-w-7xl flex-col gap-8 px-5 py-10 sm:px-8 sm:py-12">
+      <main
+        id="main-content"
+        className="mx-auto flex max-w-7xl flex-col gap-8 px-5 py-10 sm:px-8 sm:py-12"
+      >
         <section className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
           <div className="flex max-w-2xl flex-col gap-3">
             <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
               How fast is your PC at AI?
             </h1>
             <p className="max-w-xl text-base leading-relaxed text-muted-foreground">
-              Run real models in your browser. Measure generation, prompt
-              processing, and embeddings with a repeatable local benchmark.
+              A free local AI speed test for your PC. Measure LLM tokens per
+              second, prompt processing, and embeddings with real models running
+              in your browser.
             </p>
           </div>
           <div className="flex items-center gap-2 text-sm">
@@ -241,9 +243,7 @@ export function Dashboard() {
                         ? "Benchmark in progress"
                         : "Your AI benchmark"}
                     </CardTitle>
-
                   </div>
-
                 </CardHeader>
                 <CardContent className="flex flex-col gap-6">
                   <div className="grid gap-4 sm:grid-cols-3">
@@ -261,7 +261,6 @@ export function Dashboard() {
                             ? "Measurements ready"
                             : "Ready to measure"}
                       </p>
-
                     </div>
                     <Progress
                       value={
@@ -327,14 +326,11 @@ export function Dashboard() {
                     )}
                   </div>
                 </CardContent>
-
               </Card>
               <Card>
                 <CardHeader>
                   <CardTitle>AI score</CardTitle>
-                  <CardDescription>
-                    higher is faster
-                  </CardDescription>
+                  <CardDescription>higher is faster</CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-1 flex-col justify-center gap-4">
                   <div className="flex items-baseline gap-3">
@@ -436,7 +432,6 @@ export function Dashboard() {
                       </span>
                     </div>
                   </CardContent>
-
                 </Card>
               ))}
             </div>
@@ -512,7 +507,6 @@ export function Dashboard() {
                     />
                   </div>
                 </CardContent>
-
               </Card>
             </div>
           </TabsContent>
@@ -520,7 +514,6 @@ export function Dashboard() {
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <h2 className="text-xl font-semibold">Your previous runs</h2>
-
               </div>
               <Button
                 variant="outline"
@@ -596,13 +589,7 @@ export function Dashboard() {
             <Methodology />
           </TabsContent>
         </Tabs>
-        <Separator />
-        <footer className="flex flex-col justify-between gap-3 text-xs text-muted-foreground sm:flex-row">
-          <span>
-            made by <Link href="https://maty.as" target="_blank"><span className="text-blue-400 font-semibold underline ">maty.as</span></Link>
-          </span>
-          <span>{PROTOCOL}, WebLLM 0.2.85</span>
-        </footer>
+        {children}
       </main>
     </div>
   )

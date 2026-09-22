@@ -55,3 +55,19 @@ Tests cover score normalization/scaling, invalid samples, medians, variability, 
 - [WebLLM source and embedding API](https://github.com/mlc-ai/web-llm)
 - [Arctic Embed Small model card](https://huggingface.co/Snowflake/snowflake-arctic-embed-s)
 - [WebGPU and secure contexts](https://developer.mozilla.org/en-US/docs/Web/API/WebGPU_API)
+
+## Search and social sharing
+
+The default canonical origin is `https://speedtest.maty.as`. Override `SITE_URL` at build time if the domain changes. Set `SITE_NOINDEX=true` for staging; Vercel preview deployments are automatically noindex and publish no sitemap URLs. Production pages include canonical URLs, Open Graph/Twitter cards, and accurate JSON-LD. `/methodology`, `/faq`, and `/privacy` are server-rendered, linked pages. FAQ markup mirrors the visible answers; it does not guarantee a Google rich result or AI citation.
+
+The matching speedometer assets include an SVG icon, 16/32/48px ICO, Apple touch icon, 192/512px manifest icons, and a 1200×630 PNG sharing card. Editable originals live in `public/brand`; regenerate with `node scripts/generate-brand.mjs` (uses Next.js's installed Sharp dependency).
+
+After deployment:
+
+1. Verify the HTTPS domain redirects consistently to the canonical origin.
+2. Configure `GOOGLE_SITE_VERIFICATION` and/or `BING_SITE_VERIFICATION`, rebuild, and verify ownership in the respective webmaster tools.
+3. Submit `https://speedtest.maty.as/sitemap.xml` to Google Search Console and Bing Webmaster Tools.
+4. Inspect the homepage, methodology, and FAQ using URL Inspection and test JSON-LD in Google's Rich Results Test. FAQ rich results are restricted; no ratings or reviews are fabricated.
+5. Check the live social card and confirm the CDN allows search and answer-engine crawlers. Monitor real indexing, queries, and Core Web Vitals after traffic arrives.
+
+The GEO/AEO approach follows [Google's AI search guidance](https://developers.google.com/search/docs/appearance/ai-features): accessible textual answers, verifiable methodology, internal links, and structured data consistent with visible content. There is no special AI markup requirement or guaranteed placement.

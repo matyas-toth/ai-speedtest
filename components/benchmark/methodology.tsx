@@ -1,4 +1,13 @@
 import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from "@/components/ui/accordion"
+import { Button } from "@/components/ui/button"
+import { HugeiconsIcon } from "@hugeicons/react"
+import { ArrowUpRight01Icon } from "@hugeicons/core-free-icons"
+import {
   Card,
   CardContent,
   CardDescription,
@@ -13,7 +22,9 @@ export function Methodology() {
     <div className="grid gap-6 lg:grid-cols-2">
       <Card>
         <CardHeader>
-          <CardTitle>What the numbers mean</CardTitle>
+          <CardTitle>
+            <h2>What the numbers mean</h2>
+          </CardTitle>
           <CardDescription>
             Actual model inference on your browser’s WebGPU adapter.
           </CardDescription>
@@ -46,7 +57,9 @@ export function Methodology() {
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>A score you can inspect</CardTitle>
+          <CardTitle>
+            <h2>A score you can inspect</h2>
+          </CardTitle>
           <CardDescription>
             AI Index v1 · an open-ended relative throughput index.
           </CardDescription>
@@ -81,7 +94,9 @@ export function Methodology() {
       </Card>
       <Card className="lg:col-span-2">
         <CardHeader>
-          <CardTitle>Reproducibility & sources</CardTitle>
+          <CardTitle>
+            <h2>Reproducibility & sources</h2>
+          </CardTitle>
           <CardDescription>
             Fixed workloads. Local execution. No account, API key, or results
             upload.
@@ -108,54 +123,110 @@ export function Methodology() {
             capacity, and reported memory is an approximate privacy-limited
             value.
           </p>
-          <details>
-            <summary className="cursor-pointer font-medium">
-              Inspect the exact benchmark inputs
-            </summary>
-            <div className="mt-4 flex flex-col gap-4">
-              <pre className="max-h-64 overflow-auto rounded-lg bg-muted p-4 text-xs whitespace-pre-wrap">
-                {PROMPT}
-              </pre>
-              <ol className="flex list-decimal flex-col gap-2 pl-5">
-                {DOCUMENTS.map((d) => (
-                  <li key={d}>{d}</li>
-                ))}
-              </ol>
-            </div>
-          </details>
+          <Accordion>
+            <AccordionItem value="inputs">
+              <AccordionTrigger>
+                Inspect the exact benchmark inputs
+              </AccordionTrigger>
+              <AccordionContent keepMounted>
+                <div className="mt-4 flex flex-col gap-4">
+                  <pre className="max-h-64 overflow-auto rounded-lg bg-muted p-4 text-xs whitespace-pre-wrap">
+                    {PROMPT}
+                  </pre>
+                  <ol className="flex list-decimal flex-col gap-2 pl-5">
+                    {DOCUMENTS.map((d) => (
+                      <li key={d}>{d}</li>
+                    ))}
+                  </ol>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
           <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
-            <a
-              className="underline underline-offset-4"
-              href="https://webllm.mlc.ai/docs/user/basic_usage.html"
-              target="_blank"
-              rel="noreferrer"
+            <Button
+              variant="link"
+              nativeButton={false}
+              role="link"
+              className="min-h-11"
+              render={
+                <a
+                  href="https://webllm.mlc.ai/docs/user/basic_usage.html"
+                  target="_blank"
+                  rel="noreferrer"
+                />
+              }
             >
               WebLLM runtime & usage
-            </a>
-            <a
-              className="underline underline-offset-4"
-              href="https://github.com/mlc-ai/web-llm/blob/v0.2.85/src/openai_api_protocols/chat_completion.ts"
-              target="_blank"
-              rel="noreferrer"
+              <HugeiconsIcon
+                icon={ArrowUpRight01Icon}
+                data-icon="inline-end"
+                strokeWidth={2}
+                aria-hidden="true"
+              />
+            </Button>
+            <Button
+              variant="link"
+              nativeButton={false}
+              role="link"
+              className="min-h-11"
+              render={
+                <a
+                  href="https://github.com/mlc-ai/web-llm/blob/v0.2.85/src/openai_api_protocols/chat_completion.ts"
+                  target="_blank"
+                  rel="noreferrer"
+                />
+              }
             >
               Timing definitions
-            </a>
-            <a
-              className="underline underline-offset-4"
-              href="https://huggingface.co/Snowflake/snowflake-arctic-embed-s"
-              target="_blank"
-              rel="noreferrer"
+              <HugeiconsIcon
+                icon={ArrowUpRight01Icon}
+                data-icon="inline-end"
+                strokeWidth={2}
+                aria-hidden="true"
+              />
+            </Button>
+            <Button
+              variant="link"
+              nativeButton={false}
+              role="link"
+              className="min-h-11"
+              render={
+                <a
+                  href="https://huggingface.co/Snowflake/snowflake-arctic-embed-s"
+                  target="_blank"
+                  rel="noreferrer"
+                />
+              }
             >
               Arctic Embed model card
-            </a>
-            <a
-              className="underline underline-offset-4"
-              href="https://developer.mozilla.org/en-US/docs/Web/API/WebGPU_API"
-              target="_blank"
-              rel="noreferrer"
+              <HugeiconsIcon
+                icon={ArrowUpRight01Icon}
+                data-icon="inline-end"
+                strokeWidth={2}
+                aria-hidden="true"
+              />
+            </Button>
+            <Button
+              variant="link"
+              nativeButton={false}
+              role="link"
+              className="min-h-11"
+              render={
+                <a
+                  href="https://developer.mozilla.org/en-US/docs/Web/API/WebGPU_API"
+                  target="_blank"
+                  rel="noreferrer"
+                />
+              }
             >
               WebGPU support
-            </a>
+              <HugeiconsIcon
+                icon={ArrowUpRight01Icon}
+                data-icon="inline-end"
+                strokeWidth={2}
+                aria-hidden="true"
+              />
+            </Button>
           </div>
         </CardContent>
       </Card>
