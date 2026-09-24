@@ -32,7 +32,6 @@ export function BenchmarkGauge({
   const [reading, setReading] = useState<Reading | null>(
     saved && score != null ? { stage: "score", value: score, pass: 0 } : null
   )
-  const [settled, setSettled] = useState(saved)
   const source = useRef({ llm, embeddings, score, busy, saved })
   useEffect(() => {
     source.current = { llm, embeddings, score, busy, saved }
@@ -63,27 +62,17 @@ export function BenchmarkGauge({
       if (cursor < sequence.length) {
         setReading(sequence[cursor++])
         nextAt = performance.now() + 1500
-      } else if (data.score != null) {
-        setSettled(true)
-        window.clearInterval(timer)
-      }
+      } else if (data.score != null) window.clearInterval(timer)
     }, 80)
     return () => window.clearInterval(timer)
   }, [])
 
-  const stage = reading?.stage ?? "decode"
+  const stage = reading?.stage ?? (busy ? "decode" : "score")
   const max = Math.max(
     floors[stage],
     Math.ceil((reading?.value ?? 0) / floors[stage]) * floors[stage]
   )
   const value = reading?.value ?? 0
-  const interrupted =
-    !busy &&
-    score == null &&
-    (llm.length > 0 ||
-      embeddings.length > 0 ||
-      status === "Run cancelled" ||
-      status === "Run could not finish")
   return (
     <div
       className="flex w-full flex-col items-center"
@@ -92,50 +81,27 @@ export function BenchmarkGauge({
       data-pass={reading?.pass ?? 0}
     >
       <Dial value={value} max={max} stage={stage} reading={reading} />
-      <div
-        className="mt-1 flex min-h-16 flex-col items-center gap-2 text-center"
-        role="status"
-      >
-        <p className="text-sm font-medium">
-          {interrupted
-            ? reading
-              ? "Run interrupted · partial measurement"
-              : "Benchmark stopped"
-            : reading?.stage === "score"
-              ? settled
-                ? "Your benchmark is complete"
-                : "Bringing it all together"
-              : reading
-                ? `${labels[stage]} · sample ${reading.pass} of ${repetitions}`
-                : busy
-                  ? "Preparing your benchmark"
-                  : "Ready when you are"}
-        </p>
-        {reading && reading.stage !== "score" ? (
-          <div
-            className="flex gap-2"
-            aria-label={`${reading.pass} of ${repetitions} samples shown`}
-          >
-            {Array.from({ length: repetitions }, (_, i) => (
-              <span
-                key={i}
-                className="h-1 w-7 rounded-full bg-muted"
-                style={
-                  i < reading.pass
-                    ? { backgroundColor: `var(--gauge-${stage})` }
-                    : undefined
-                }
-              />
-            ))}
-          </div>
-        ) : (
-          <p className="text-xs text-muted-foreground">
-            {reading ? "Higher is faster" : "Real models. On your device."}
-          </p>
-        )}
-      </div>
+      {reading && reading.stage !== "score" ? (
+        <div
+          className="mt-1 flex gap-2"
+          role="status"
+          aria-label={`${reading.pass} of ${repetitions} samples shown`}
+        >
+          {Array.from({ length: repetitions }, (_, i) => (
+            <span
+              key={i}
+              className="h-1 w-7 rounded-full bg-muted"
+              style={
+                i < reading.pass
+                  ? { backgroundColor: `var(--gauge-${stage})` }
+                  : undefined
+              }
+            />
+          ))}
+        </div>
+      ) : null}
       <ol
-        className="mt-3 flex gap-5 text-xs text-muted-foreground"
+        className="mt-2 flex gap-5 text-xs text-muted-foreground"
         aria-label="Benchmark stages"
       >
         {(["decode", "embed", "score"] as const).map((item, i) => (
@@ -191,16 +157,16 @@ function Dial({
   const needle = useRef<SVGGElement>(null)
   const fill = useRef<SVGPathElement>(null)
   const number = useRef<HTMLSpanElement>(null)
-  const current = useRef({ value: 0, ratio: 0, stage, pass: 0 })
+  const current = useRef({ value: 0, ratio: 0, stage })
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)")
     const from = { ...current.current }
-    const changed = from.stage !== stage || from.pass !== (reading?.pass ?? 0)
+    const changed = from.stage !== stage
     const started = performance.now()
     let frame = 0
     const render = (now: number) => {
       const t = reduced.matches ? 1 : Math.min(1, (now - started) / 1100)
-      // Reset between units, then sweep into the next measured workload.
+      // Reset only when changing workloads; passes animate from the previous value.
       const reset = changed && t < 0.25
       const progress = changed ? Math.max(0, (t - 0.25) / 0.75) : t
       const ease = 1 - Math.pow(1 - progress, 3)
@@ -216,7 +182,6 @@ function Dial({
         value: displayed,
         ratio,
         stage,
-        pass: reading?.pass ?? 0,
       }
       needle.current?.setAttribute(
         "transform",
@@ -237,11 +202,11 @@ function Dial({
   }, [value, max, stage, reading])
   return (
     <div
-      className="relative aspect-[440/400] w-full max-w-[470px]"
+      className="relative aspect-[440/400] w-full max-w-[470px] sm:aspect-[440/350]"
       style={{ color: `var(--gauge-${stage})` }}
     >
       <svg
-        viewBox="0 0 440 400"
+        viewBox="0 0 440 350"
         className="size-full overflow-visible"
         aria-hidden="true"
       >
@@ -318,7 +283,7 @@ function Dial({
           className="transition-colors duration-700"
         />
       </svg>
-      <div className="absolute inset-x-0 top-[63%] flex flex-col items-center gap-1">
+      <div className="absolute inset-x-0 top-[68%] flex flex-col items-center gap-1">
         <span className="text-[10px] font-medium tracking-[0.2em] uppercase transition-colors duration-700">
           {reading ? labels[stage] : ""}
         </span>

@@ -233,7 +233,7 @@ export function Dashboard({ children }: { children?: React.ReactNode }) {
                   locally in your browser.
                 </p>
               </div>
-              <div className="flex min-w-0 flex-col items-center gap-6">
+              <div className="flex min-w-0 flex-col items-center gap-3">
                 <BenchmarkGauge
                   key={selected?.id ?? runKey}
                   llm={llm}
