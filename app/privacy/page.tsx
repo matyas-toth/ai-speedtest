@@ -42,7 +42,11 @@ export default function Page() {
               GitHub. Those services and the website host can receive ordinary
               request information such as your IP address and browser headers.
               Their handling of those requests is separate from local benchmark
-              processing. The application includes no analytics or advertising
+              processing. Microsoft Clarity loads on each page and records site
+              usage, such as pages viewed, clicks, and scrolls. It may set
+              cookies, and session recordings can include what is visible on
+              screen. Microsoft receives ordinary request information such as
+              your IP address and browser headers. There are no advertising
               trackers.
             </p>
           </CardContent>
