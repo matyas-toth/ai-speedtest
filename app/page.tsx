@@ -1,9 +1,8 @@
 import { Dashboard } from "@/components/benchmark/dashboard"
-import { BenchmarkGuide } from "@/components/site/benchmark-guide"
 import { StructuredData } from "@/components/site/structured-data"
 import { absoluteUrl, description, pageMetadata, siteName } from "@/lib/site"
 export const metadata = pageMetadata(
-  "AI Speedtest — Free Local AI & WebGPU Benchmark",
+  "AI Speedtest | Free Local AI & WebGPU Benchmark",
   description,
   "/"
 )
@@ -44,9 +43,7 @@ export default function Page() {
           ],
         }}
       />
-      <Dashboard>
-        <BenchmarkGuide />
-      </Dashboard>
+      <Dashboard />
     </>
   )
 }

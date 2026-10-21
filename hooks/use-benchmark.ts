@@ -66,9 +66,7 @@ export function useBenchmark() {
   function cancel() {
     stopWorker()
     setStatus("Run cancelled")
-    setNotice(
-      "The worker was stopped and GPU resources released. Partial measurements are not scored or saved."
-    )
+    setNotice("The benchmark was cancelled; incomplete results were not saved.")
   }
   function start(repetitions: number) {
     if (worker.current || !device?.available) return
@@ -204,11 +202,9 @@ export function useBenchmark() {
     try {
       localStorage.removeItem(HISTORY_KEY)
       setHistory([])
-      setNotice(
-        "Saved run history cleared. Downloaded model files are kept in the browser cache."
-      )
+      return "Saved benchmark history has been cleared."
     } catch {
-      setNotice("This browser did not allow clearing local history.")
+      return "This browser did not allow clearing local history."
     }
   }
   return {

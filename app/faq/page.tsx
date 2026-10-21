@@ -1,11 +1,4 @@
 import { FaqList } from "@/components/site/faq-list"
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card"
 import { ArticleShell } from "@/components/site/navigation"
 import { StructuredData } from "@/components/site/structured-data"
 import { faqs } from "@/lib/faq"
@@ -17,10 +10,7 @@ export const metadata = pageMetadata(
 )
 export default function Page() {
   return (
-    <ArticleShell
-      title="Local AI benchmarking, answered."
-      intro="Practical answers about running the test and understanding your PC’s results."
-    >
+    <ArticleShell title="Frequently asked questions">
       <StructuredData
         data={{
           "@context": "https://schema.org",
@@ -33,19 +23,7 @@ export default function Page() {
           })),
         }}
       />
-      <Card className="max-w-4xl">
-        <CardHeader>
-          <CardTitle>
-            <h2>Frequently asked questions</h2>
-          </CardTitle>
-          <CardDescription>
-            Getting started, understanding results, and keeping your data local.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <FaqList items={faqs} />
-        </CardContent>
-      </Card>
+      <FaqList items={faqs} />
     </ArticleShell>
   )
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef } from "react"
 import type { EmbeddingSample, Sample } from "@/lib/benchmark"
 
 type Reading = {
@@ -8,122 +8,67 @@ type Reading = {
   value: number
   pass: number
 }
-const labels = { decode: "LLM decode", embed: "Embeddings", score: "AI score" }
+const labels = {
+  decode: "Text generation",
+  embed: "Embeddings",
+  score: "AI score",
+}
 const floors = { decode: 100, embed: 5000, score: 3000 }
 
-// All samples are retained: a fast worker cannot overwrite a reading mid-sweep.
 export function BenchmarkGauge({
   llm,
   embeddings,
   score,
   busy,
-  repetitions,
-  saved = false,
-  status,
 }: {
   llm: Sample[]
   embeddings: EmbeddingSample[]
   score?: number
   busy: boolean
-  repetitions: number
-  saved?: boolean
-  status: string
 }) {
-  const [reading, setReading] = useState<Reading | null>(
-    saved && score != null ? { stage: "score", value: score, pass: 0 } : null
-  )
-  const source = useRef({ llm, embeddings, score, busy, saved })
-  useEffect(() => {
-    source.current = { llm, embeddings, score, busy, saved }
-  }, [llm, embeddings, score, busy, saved])
-  useEffect(() => {
-    let cursor = 0
-    let nextAt = 0
-    const timer = window.setInterval(() => {
-      const data = source.current
-      if (data.saved) return
-      if (!data.busy && data.score == null) return
-      const sequence: Reading[] = [
-        ...data.llm.map((s) => ({
-          stage: "decode" as const,
-          value: s.decode,
-          pass: s.pass,
-        })),
-        ...data.embeddings.map((s) => ({
-          stage: "embed" as const,
-          value: s.tokensPerSecond,
-          pass: s.pass,
-        })),
-        ...(data.score == null
-          ? []
-          : [{ stage: "score" as const, value: data.score, pass: 0 }]),
-      ]
-      if (performance.now() < nextAt) return
-      if (cursor < sequence.length) {
-        setReading(sequence[cursor++])
-        nextAt = performance.now() + 1500
-      } else if (data.score != null) window.clearInterval(timer)
-    }, 80)
-    return () => window.clearInterval(timer)
-  }, [])
-
+  const latestEmbedding = embeddings.at(-1)
+  const latestLlm = llm.at(-1)
+  const reading: Reading | null =
+    score != null
+      ? { stage: "score", value: score, pass: 0 }
+      : latestEmbedding
+        ? {
+            stage: "embed",
+            value: latestEmbedding.tokensPerSecond,
+            pass: latestEmbedding.pass,
+          }
+        : latestLlm
+          ? { stage: "decode", value: latestLlm.decode, pass: latestLlm.pass }
+          : null
   const stage = reading?.stage ?? (busy ? "decode" : "score")
   const max = Math.max(
     floors[stage],
     Math.ceil((reading?.value ?? 0) / floors[stage]) * floors[stage]
   )
-  const value = reading?.value ?? 0
   return (
     <div
-      className="flex w-full flex-col items-center"
+      className="benchmark-gauge"
       data-testid="benchmark-gauge"
       data-stage={reading?.stage ?? "ready"}
       data-pass={reading?.pass ?? 0}
+      role="img"
+      aria-label={
+        reading
+          ? `${labels[stage]}: ${reading.value.toLocaleString(undefined, { maximumFractionDigits: stage === "score" ? 0 : 1 })} ${stage === "score" ? "points" : "tokens per second"}`
+          : busy
+            ? "Preparing benchmark"
+            : "AI score will appear after the benchmark"
+      }
     >
-      <Dial value={value} max={max} stage={stage} reading={reading} />
-      {reading && reading.stage !== "score" ? (
-        <div
-          className="mt-1 flex gap-2"
-          role="status"
-          aria-label={`${reading.pass} of ${repetitions} samples shown`}
-        >
-          {Array.from({ length: repetitions }, (_, i) => (
-            <span
-              key={i}
-              className="h-1 w-7 rounded-full bg-muted"
-              style={
-                i < reading.pass
-                  ? { backgroundColor: `var(--gauge-${stage})` }
-                  : undefined
-              }
-            />
-          ))}
-        </div>
-      ) : null}
-      <ol
-        className="mt-2 flex gap-5 text-xs text-muted-foreground"
-        aria-label="Benchmark stages"
-      >
-        {(["decode", "embed", "score"] as const).map((item, i) => (
-          <li
-            key={item}
-            className="flex items-center gap-1.5"
-            style={
-              stage === item && reading
-                ? { color: `var(--gauge-${item})` }
-                : undefined
-            }
-          >
-            <span className="size-1.5 rounded-full bg-current" />
-            {i === 2 ? "Score" : labels[item]}
-          </li>
-        ))}
-      </ol>
-      <span className="sr-only">{status}</span>
+      <Dial
+        value={reading?.value ?? 0}
+        max={max}
+        stage={stage}
+        hasReading={reading !== null}
+      />
     </div>
   )
 }
-
 function point(angle: number, radius: number) {
   const radians = (angle * Math.PI) / 180
   return {
@@ -147,12 +92,12 @@ function Dial({
   value,
   max,
   stage,
-  reading,
+  hasReading,
 }: {
   value: number
   max: number
   stage: Reading["stage"]
-  reading: Reading | null
+  hasReading: boolean
 }) {
   const needle = useRef<SVGGElement>(null)
   const fill = useRef<SVGPathElement>(null)
@@ -173,11 +118,11 @@ function Dial({
       const ratio = reset
         ? from.ratio * (1 - t / 0.25)
         : (changed ? 0 : from.ratio) +
-        (value / max - (changed ? 0 : from.ratio)) * ease
+          (value / max - (changed ? 0 : from.ratio)) * ease
       const displayed = reset
         ? 0
         : (changed ? 0 : from.value) +
-        (value - (changed ? 0 : from.value)) * ease
+          (value - (changed ? 0 : from.value)) * ease
       current.current = {
         value: displayed,
         ratio,
@@ -189,21 +134,21 @@ function Dial({
       )
       fill.current?.setAttribute("stroke-dasharray", `${ratio * 100} 100`)
       if (number.current)
-        number.current.textContent = reading
+        number.current.textContent = hasReading
           ? displayed.toLocaleString(undefined, {
-            maximumFractionDigits: stage === "score" ? 0 : 1,
-            minimumFractionDigits: stage === "score" ? 0 : 1,
-          })
+              maximumFractionDigits: stage === "score" ? 0 : 1,
+              minimumFractionDigits: stage === "score" ? 0 : 1,
+            })
           : "—"
       if (t < 1) frame = requestAnimationFrame(render)
     }
     frame = requestAnimationFrame(render)
     return () => cancelAnimationFrame(frame)
-  }, [value, max, stage, reading])
+  }, [value, max, stage, hasReading])
   return (
     <div
-      className="relative aspect-[440/400] w-full max-w-[470px] sm:aspect-[440/350]"
-      style={{ color: `var(--gauge-${stage})` }}
+      className="relative aspect-[440/350] w-full max-w-[380px]"
+      style={{ color: "var(--primary)" }}
     >
       <svg
         viewBox="0 0 440 350"
@@ -247,25 +192,26 @@ function Dial({
             strokeWidth={tick.major ? 2 : 1}
           />
         ))}
-        {Array.from({ length: 7 }, (_, i) => {
-          const p = point(150 + i * 40, i === 0 || i === 6 ? 205 : 133)
-          return (
-            <text
-              key={i}
-              x={p.x}
-              y={p.y}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              fill="var(--muted-foreground)"
-              fontSize="10"
-              style={{ fontVariantNumeric: "tabular-nums" }}
-            >
-              {((max * i) / 6).toLocaleString(undefined, {
-                maximumFractionDigits: 0,
-              })}
-            </text>
-          )
-        })}
+        {hasReading &&
+          Array.from({ length: 7 }, (_, i) => {
+            const p = point(150 + i * 40, i === 0 || i === 6 ? 205 : 133)
+            return (
+              <text
+                key={i}
+                x={p.x}
+                y={p.y}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fill="var(--muted-foreground)"
+                fontSize="10"
+                style={{ fontVariantNumeric: "tabular-nums" }}
+              >
+                {((max * i) / 6).toLocaleString(undefined, {
+                  maximumFractionDigits: 0,
+                })}
+              </text>
+            )
+          })}
         <g ref={needle} transform="rotate(150 220 220)">
           <path
             d="M 212 215 L 358 220 L 212 225 Z"
@@ -283,22 +229,22 @@ function Dial({
           className="transition-colors duration-700"
         />
       </svg>
-      <div className="absolute inset-x-0 top-[68%] flex flex-col items-center gap-1">
-        <span className="text-[10px] font-medium tracking-[0.2em] uppercase transition-colors duration-700">
-          {reading ? labels[stage] : ""}
-        </span>
+      <div
+        className="absolute inset-x-0 top-[72%] flex flex-col items-center gap-1.5"
+        aria-hidden="true"
+      >
         <span
           ref={number}
-          className="text-5xl leading-tight font-semibold tracking-tighter text-foreground tabular-nums sm:text-6xl"
+          className="text-5xl leading-none font-semibold tracking-tighter text-foreground tabular-nums sm:text-[3.5rem]"
         >
           —
         </span>
-        <span className="text-xs text-muted-foreground">
-          {reading
+        <span className="text-sm text-muted-foreground">
+          {hasReading
             ? stage === "score"
-              ? "points"
-              : "tokens / second"
-            : "Local WebGPU benchmark"}
+              ? "AI score"
+              : `${labels[stage]} · tok/s`
+            : "AI score"}
         </span>
       </div>
     </div>

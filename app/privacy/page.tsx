@@ -1,72 +1,61 @@
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { ArticleShell } from "@/components/site/navigation"
 import { pageMetadata } from "@/lib/site"
+
 export const metadata = pageMetadata(
   "Benchmark privacy & local storage",
   "Learn what AI Speedtest stores locally, what happens during model downloads, and how benchmark results and JSON exports are handled.",
   "/privacy"
 )
+
 export default function Page() {
   return (
     <ArticleShell
-      title="Your benchmark stays on your device."
-      intro="AI Speedtest runs inference locally. The application does not upload your benchmark results or require an account."
+      title="Privacy"
+      intro="AI Speedtest runs models on your device and saves results in your browser without requiring an account."
     >
-      <div className="grid max-w-4xl gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              <h2>What this browser stores</h2>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="leading-relaxed text-pretty">
-              Up to 20 completed benchmark runs are saved in localStorage,
-              including measurements and hardware and browser information
-              exposed by your browser. Your theme preference is also stored
-              locally. Model files may be cached when browser storage permits.
-              Clear this site’s data in your browser settings to remove local
-              history, preferences, and cached files.
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              <h2>Downloads and network requests</h2>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="leading-relaxed text-pretty">
-              The initial model and runtime downloads contact Hugging Face and
-              GitHub. Those services and the website host can receive ordinary
-              request information such as your IP address and browser headers.
-              Their handling of those requests is separate from local benchmark
-              processing. Microsoft Clarity loads on each page and records site
-              usage, such as pages viewed, clicks, and scrolls. It may set
-              cookies, and session recordings can include what is visible on
-              screen. Microsoft receives ordinary request information such as
-              your IP address and browser headers. There are no advertising
-              trackers.
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              <h2>Exporting results</h2>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="leading-relaxed text-pretty">
-              JSON export creates a file on your device. It includes raw
-              samples, model and protocol details, browser and hardware
-              information, and run conditions. Review that file before sharing
-              it. Exporting does not automatically publish it or send it to a
-              server.
-            </p>
-          </CardContent>
-        </Card>
+      <div className="article-sections">
+        <section>
+          <h2>Browser storage</h2>
+          <p>
+            Your browser stores up to 20 completed runs, including measurements
+            and the hardware and browser information it exposes. Your theme
+            preference is saved locally, and model files may be cached when
+            storage permits.
+          </p>
+          <p>
+            You can remove saved runs from History, or clear this site’s data in
+            your browser settings to remove history, preferences, and cached
+            files.
+          </p>
+        </section>
+        <section>
+          <h2>Network requests</h2>
+          <p>
+            Initial model and runtime downloads contact Hugging Face and GitHub.
+            These services and the website host receive ordinary request
+            information such as your IP address and browser headers.
+          </p>
+          <p>
+            Microsoft Clarity records site usage, including pages viewed,
+            clicks, and scrolls. It may set cookies, and session recordings can
+            include visible screen content. Microsoft also receives ordinary
+            request information such as your IP address and browser headers.
+          </p>
+        </section>
+        <section>
+          <h2>Result exports</h2>
+          <p>
+            Downloading results creates a JSON file on your device containing
+            raw measurements, model and protocol details, hardware and browser
+            information, and run conditions. Copying results puts the same
+            information on your clipboard, so you can review it before sharing.
+          </p>
+          <p>
+            The application does not automatically publish or upload result
+            files, although usage recordings may capture results visible on
+            screen.
+          </p>
+        </section>
       </div>
     </ArticleShell>
   )

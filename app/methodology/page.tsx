@@ -10,8 +10,8 @@ export const metadata = pageMetadata(
 export default function Page() {
   return (
     <ArticleShell
-      title="How AI Speedtest measures performance"
-      intro="A repeatable WebGPU workload with real models, fixed inputs, and a score you can inspect. Here is exactly what we measure—and what the results can tell you."
+      title="How the benchmark works"
+      intro="The test runs fixed language and embedding workloads on your browser’s WebGPU adapter and reports the median of three or five measured passes."
     >
       <StructuredData
         data={{
