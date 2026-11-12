@@ -11,7 +11,13 @@ export default function Page() {
   return (
     <ArticleShell
       title="How the benchmark works"
-      intro="The test runs fixed language and embedding workloads on your browser’s WebGPU adapter and reports the median of three or five measured passes."
+      toc={[
+        { href: "#measurements", label: "Measurements" },
+        { href: "#score", label: "AI score" },
+        { href: "#conditions", label: "Test conditions" },
+        { href: "#models", label: "Models and inputs" },
+        { href: "#sources", label: "Sources" },
+      ]}
     >
       <StructuredData
         data={{

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next"
-import { Geist_Mono, Public_Sans } from "next/font/google"
+import { Geist_Mono, Instrument_Sans } from "next/font/google"
+import localFont from "next/font/local"
 import Script from "next/script"
 
 import "./globals.css"
@@ -8,7 +9,23 @@ import { SiteFooter } from "@/components/site/navigation"
 import { siteUrl, isIndexable } from "@/lib/site"
 import { cn } from "@/lib/utils"
 
-const publicSans = Public_Sans({ subsets: ["latin"], variable: "--font-sans" })
+const instrumentSans = Instrument_Sans({
+  subsets: ["latin"],
+  variable: "--font-instrument-sans",
+})
+
+const aesthetNova = localFont({
+  src: "./fonts/AesthetNova-Medium.woff2",
+  weight: "400",
+  style: "normal",
+  variable: "--font-aesthet-nova",
+  display: "swap",
+})
+
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  variable: "--font-geist-mono",
+})
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -31,17 +48,13 @@ export const metadata: Metadata = {
       : undefined,
   },
 }
+
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#18181b" },
+    { media: "(prefers-color-scheme: light)", color: "#f4f1ea" },
+    { media: "(prefers-color-scheme: dark)", color: "#0e0f0d" },
   ],
 }
-
-const fontMono = Geist_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
-})
 
 export default function RootLayout({
   children,
@@ -54,9 +67,9 @@ export default function RootLayout({
       suppressHydrationWarning
       className={cn(
         "antialiased",
-        fontMono.variable,
-        "font-sans",
-        publicSans.variable
+        instrumentSans.variable,
+        aesthetNova.variable,
+        geistMono.variable
       )}
     >
       <body className="flex min-h-svh flex-col">

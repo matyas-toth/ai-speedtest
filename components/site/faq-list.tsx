@@ -11,19 +11,23 @@ export function FaqList({
   items: readonly { question: string; answer: string }[]
 }) {
   return (
-    <Accordion multiple>
-      {items.map(({ question, answer }, index) => (
-        <AccordionItem
-          key={question}
-          value={question}
-          id={`question-${index + 1}`}
-        >
-          <AccordionTrigger>{question}</AccordionTrigger>
-          <AccordionContent keepMounted>
-            <p className="leading-relaxed text-pretty">{answer}</p>
-          </AccordionContent>
-        </AccordionItem>
-      ))}
-    </Accordion>
+    <div className="faq-list">
+      <Accordion multiple>
+        {items.map(({ question, answer }, index) => (
+          <AccordionItem
+            key={question}
+            value={question}
+            id={`question-${index + 1}`}
+          >
+            <AccordionTrigger>
+              <span className="faq-question">{question}</span>
+            </AccordionTrigger>
+            <AccordionContent keepMounted>
+              <p className="leading-relaxed text-pretty">{answer}</p>
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
+    </div>
   )
 }

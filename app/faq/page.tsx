@@ -10,7 +10,19 @@ export const metadata = pageMetadata(
 )
 export default function Page() {
   return (
-    <ArticleShell title="Frequently asked questions">
+    <ArticleShell
+      title="Frequently asked questions"
+      toc={[
+        { href: "#question-1", label: "What the test measures" },
+        { href: "#question-2", label: "Running a test" },
+        { href: "#question-3", label: "Tokens per second" },
+        { href: "#question-4", label: "Interpreting the score" },
+        { href: "#question-5", label: "GPU or CPU" },
+        { href: "#question-6", label: "WebGPU support" },
+        { href: "#question-7", label: "Privacy" },
+        { href: "#question-8", label: "Native comparisons" },
+      ]}
+    >
       <StructuredData
         data={{
           "@context": "https://schema.org",

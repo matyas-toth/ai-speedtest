@@ -3,11 +3,11 @@ export const LLM_MODEL = "SmolLM2-360M-Instruct-q4f32_1-MLC"
 export const EMBED_MODEL = "snowflake-arctic-embed-s-q0f32-MLC-b4"
 export const RUNTIME = "WebLLM 0.2.85"
 export const OUTPUT_TOKENS = 128
+export const PROMPT_PARAGRAPH =
+  "Local artificial intelligence processes data on a personal computer. Language models generate text one token at a time. Prompt processing handles the input before generation begins. Embedding models turn documents into vectors for semantic search. Performance depends on the model, precision, memory, browser, and graphics driver. A repeatable benchmark uses fixed inputs and excludes model downloads and warm-up.\n"
 export const PROMPT =
   "Summarize the following notes and explain their practical implications in detail.\n" +
-  "Local artificial intelligence processes data on a personal computer. Language models generate text one token at a time. Prompt processing handles the input before generation begins. Embedding models turn documents into vectors for semantic search. Performance depends on the model, precision, memory, browser, and graphics driver. A repeatable benchmark uses fixed inputs and excludes model downloads and warm-up.\n".repeat(
-    8
-  )
+  PROMPT_PARAGRAPH.repeat(8)
 export const DOCUMENTS = [
   "Local language models help people draft and summarize documents without sending their text to a remote server.",
   "Semantic search represents each document as a vector, then finds nearby vectors to retrieve relevant information.",
@@ -49,6 +49,7 @@ export type DeviceInfo = {
   maxBufferMB: number | null
   f16: boolean
   browser: string
+  secure: boolean
   reason?: string
 }
 export type Result = {
@@ -83,13 +84,7 @@ export function median(values: number[]): number {
     : (sorted[middle - 1] + sorted[middle]) / 2
 }
 // A versioned, unbounded index. Anchors are design targets, not a reference PC or population percentiles.
-export function calculateScore(
-  llm: Sample[],
-  embeddings: EmbeddingSample[]
-): number {
-  const decode = median(llm.map((s) => s.decode))
-  const prefill = median(llm.map((s) => s.prefill))
-  const embed = median(embeddings.map((s) => s.tokensPerSecond))
+function scoreFrom(decode: number, prefill: number, embed: number) {
   return Math.round(
     1000 *
       Math.exp(
@@ -98,6 +93,33 @@ export function calculateScore(
           0.25 * Math.log(embed / 1000)
       )
   )
+}
+export function calculateScore(
+  llm: Sample[],
+  embeddings: EmbeddingSample[]
+): number {
+  return scoreFrom(
+    median(llm.map((s) => s.decode)),
+    median(llm.map((s) => s.prefill)),
+    median(embeddings.map((s) => s.tokensPerSecond))
+  )
+}
+export function estimateScore(
+  llm: Sample[],
+  embeddings: EmbeddingSample[]
+): number | null {
+  if (!llm.length) return null
+  try {
+    return scoreFrom(
+      median(llm.map((s) => s.decode)),
+      median(llm.map((s) => s.prefill)),
+      embeddings.length
+        ? median(embeddings.map((s) => s.tokensPerSecond))
+        : 1000
+    )
+  } catch {
+    return null
+  }
 }
 export function variation(values: number[]): number {
   return ((Math.max(...values) - Math.min(...values)) / median(values)) * 100
@@ -114,18 +136,17 @@ export async function detectDevice(): Promise<DeviceInfo> {
     maxBufferMB: null,
     f16: false,
     browser: navigator.userAgent,
+    secure: isSecureContext,
   }
   if (!isSecureContext)
     return {
       ...base,
-      reason:
-        "WebGPU needs HTTPS or localhost. Open this app on a secure connection.",
+      reason: "WebGPU requires HTTPS or localhost.",
     }
   if (!navigator.gpu)
     return {
       ...base,
-      reason:
-        "This browser does not expose WebGPU. Try an up-to-date Chrome or Edge with hardware acceleration enabled.",
+      reason: "This browser does not expose WebGPU.",
     }
   try {
     const adapter = await navigator.gpu.requestAdapter({
@@ -134,8 +155,7 @@ export async function detectDevice(): Promise<DeviceInfo> {
     if (!adapter)
       return {
         ...base,
-        reason:
-          "No WebGPU adapter was available. Check browser hardware acceleration and your graphics driver.",
+        reason: "No WebGPU adapter was available.",
       }
     const info = adapter.info
     const gpu =

@@ -11,10 +11,14 @@ export default function Page() {
   return (
     <ArticleShell
       title="Privacy"
-      intro="AI Speedtest runs models on your device and saves results in your browser without requiring an account."
+      toc={[
+        { href: "#storage", label: "Browser storage" },
+        { href: "#network", label: "Network requests" },
+        { href: "#exports", label: "Result exports" },
+      ]}
     >
       <div className="article-sections">
-        <section>
+        <section id="storage">
           <h2>Browser storage</h2>
           <p>
             Your browser stores up to 20 completed runs, including measurements
@@ -28,7 +32,7 @@ export default function Page() {
             files.
           </p>
         </section>
-        <section>
+        <section id="network">
           <h2>Network requests</h2>
           <p>
             Initial model and runtime downloads contact Hugging Face and GitHub.
@@ -42,7 +46,7 @@ export default function Page() {
             request information such as your IP address and browser headers.
           </p>
         </section>
-        <section>
+        <section id="exports">
           <h2>Result exports</h2>
           <p>
             Downloading results creates a JSON file on your device containing

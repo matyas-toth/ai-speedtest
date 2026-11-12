@@ -2,6 +2,7 @@ import test from "node:test"
 import assert from "node:assert/strict"
 import {
   calculateScore,
+  estimateScore,
   median,
   variation,
   readHistory,
@@ -47,6 +48,12 @@ test("score anchors and multiplicative scaling are consistent", () => {
     calculateScore([sample(50), sample(1), sample(50)], [embedding()]),
     1000
   )
+})
+test("live score estimates use completed measurements and the target embedding", () => {
+  assert.equal(estimateScore([], []), null)
+  assert.equal(estimateScore([sample()], []), 1000)
+  assert.equal(estimateScore([sample(100, 1000)], [embedding(2000)]), 2000)
+  assert.equal(estimateScore([sample()], [embedding(500)]), 841)
 })
 test("variation identifies unstable runs", () => {
   assert.equal(variation([50, 50, 50]), 0)

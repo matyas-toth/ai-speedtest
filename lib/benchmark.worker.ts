@@ -25,11 +25,11 @@ self.onmessage = async (event: MessageEvent<{ repetitions: number }>) => {
         progress(report.text, report.progress * 100),
       logLevel: "WARN",
     })
-    progress("Downloading and preparing SmolLM2…", 0)
+    progress("Downloading and preparing SmolLM2.", 0)
     await engine.reload(LLM_MODEL, { context_window_size: 2048 })
     phase = "warmup-llm"
     progress(
-      "Warming up the full language workload. This pass is not scored.",
+      "The language model is warming up in an unscored pass.",
       0
     )
     for (let pass = 0; pass <= repetitions; pass++) {
@@ -38,7 +38,7 @@ self.onmessage = async (event: MessageEvent<{ repetitions: number }>) => {
       if (pass > 0) {
         phase = "llm"
         progress(
-          `Language model · measured pass ${pass} of ${repetitions}`,
+          `Measuring the language model, pass ${pass} of ${repetitions}.`,
           ((pass - 1) / repetitions) * 100
         )
       }
@@ -86,18 +86,18 @@ self.onmessage = async (event: MessageEvent<{ repetitions: number }>) => {
     // Release the language model before loading embeddings to keep peak memory low.
     await engine.unload()
     phase = "loading-embed"
-    progress("Downloading and preparing Arctic Embed Small…", 0)
+    progress("Downloading and preparing Arctic Embed Small.", 0)
     await engine.reload(EMBED_MODEL)
     phase = "warmup-embed"
     progress(
-      "Warming up four-document embedding batches. This pass is not scored.",
+      "The embedding model is warming up in an unscored pass.",
       0
     )
     for (let pass = 0; pass <= repetitions; pass++) {
       if (pass > 0) {
         phase = "embed"
         progress(
-          `Embeddings · measured pass ${pass} of ${repetitions}`,
+          `Measuring embeddings, pass ${pass} of ${repetitions}.`,
           ((pass - 1) / repetitions) * 100
         )
       }

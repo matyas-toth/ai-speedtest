@@ -13,6 +13,7 @@ import {
   variation,
   type DeviceInfo,
   type EmbeddingSample,
+  type Phase,
   type Result,
   type Sample,
   type WorkerEvent,
@@ -25,6 +26,7 @@ export function useBenchmark() {
   const [busy, setBusy] = useState(false)
   const [status, setStatus] = useState("Ready when you are")
   const [progress, setProgress] = useState(0)
+  const [phase, setPhase] = useState<Phase | null>(null)
   const [llm, setLlm] = useState<Sample[]>([])
   const [embeddings, setEmbeddings] = useState<EmbeddingSample[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -65,8 +67,15 @@ export function useBenchmark() {
   }
   function cancel() {
     stopWorker()
+    setLlm([])
+    setEmbeddings([])
+    setProgress(0)
+    setPhase(null)
+    setError(null)
     setStatus("Run cancelled")
-    setNotice("The benchmark was cancelled; incomplete results were not saved.")
+    setNotice(
+      "The run was cancelled and its partial measurements were discarded."
+    )
   }
   function start(repetitions: number) {
     if (worker.current || !device?.available) return
@@ -77,6 +86,7 @@ export function useBenchmark() {
     setError(null)
     setNotice(null)
     setProgress(0)
+    setPhase(null)
     setElapsed(0)
     setStatus("Starting local benchmark…")
     started.current = performance.now()
@@ -85,6 +95,7 @@ export function useBenchmark() {
     const embeddingSamples: EmbeddingSample[] = []
     const fail = (message: string) => {
       stopWorker()
+      setPhase(null)
       setStatus("Run could not finish")
       setError(message)
     }
@@ -113,6 +124,7 @@ export function useBenchmark() {
         }
         if (data.type === "progress") {
           setStatus(data.message)
+          setPhase(data.phase)
           const ranges = {
             "loading-llm": [0, 20],
             "warmup-llm": [20, 5],
@@ -144,7 +156,7 @@ export function useBenchmark() {
             const warnings: string[] = []
             if (hidden.current)
               warnings.push(
-                "This tab was in the background during the run. Browser throttling can affect the result; rerun with the tab visible."
+                "This tab was in the background during the run, and browser throttling can affect the result, so rerun with the tab visible."
               )
             if (
               variation(samples.map((s) => s.decode)) > 20 ||
@@ -152,7 +164,7 @@ export function useBenchmark() {
               variation(embeddingSamples.map((s) => s.tokensPerSecond)) > 20
             )
               warnings.push(
-                "Measured passes varied by more than 20%. Close other workloads and rerun for a more stable result."
+                "Measured passes varied by more than 20%, so close other workloads and rerun for a more stable result."
               )
             const completed: Result = {
               id: crypto.randomUUID(),
@@ -171,6 +183,7 @@ export function useBenchmark() {
             }
             setResult(completed)
             setProgress(100)
+            setPhase(null)
             setStatus("Benchmark complete")
             const next = [completed, ...readHistory()].slice(0, 20)
             setHistory(next)
@@ -178,7 +191,7 @@ export function useBenchmark() {
               localStorage.setItem(HISTORY_KEY, JSON.stringify(next))
             } catch {
               setNotice(
-                "Results are ready, but this browser could not save history. Export JSON to keep this run."
+                "Results are ready, but this browser could not save history, so export JSON to keep this run."
               )
             }
             stopWorker()
@@ -207,6 +220,15 @@ export function useBenchmark() {
       return "This browser did not allow clearing local history."
     }
   }
+  function restoreHistory(runs: Result[]) {
+    setHistory(runs)
+    try {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(runs))
+      return "Saved benchmark history has been restored."
+    } catch {
+      return "History was restored for this session, but the browser did not allow saving it."
+    }
+  }
   return {
     device,
     history,
@@ -214,6 +236,7 @@ export function useBenchmark() {
     busy,
     status,
     progress,
+    phase,
     llm,
     embeddings,
     error,
@@ -222,5 +245,6 @@ export function useBenchmark() {
     start,
     cancel,
     clearHistory,
+    restoreHistory,
   }
 }

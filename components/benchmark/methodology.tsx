@@ -1,9 +1,9 @@
-import { DOCUMENTS, EMBED_MODEL, LLM_MODEL, PROMPT } from "@/lib/benchmark"
+import { DOCUMENTS, EMBED_MODEL, LLM_MODEL, PROMPT_PARAGRAPH } from "@/lib/benchmark"
 
 export function Methodology() {
   return (
     <div className="article-sections">
-      <section>
+      <section id="measurements">
         <h2>Measurements</h2>
         <dl className="measurement-definitions">
           <Definition title="Text generation" unit="tok/s">
@@ -28,7 +28,7 @@ export function Methodology() {
           </Definition>
         </dl>
       </section>
-      <section>
+      <section id="score">
         <h2>AI score</h2>
         <p>
           The score combines the median throughput of each workload, with text
@@ -49,7 +49,7 @@ export function Methodology() {
           percentile nor a hardware ranking.
         </p>
       </section>
-      <section>
+      <section id="conditions">
         <h2>Test conditions</h2>
         <p>
           Each model completes one unscored warm-up before three or five
@@ -69,7 +69,7 @@ export function Methodology() {
           speed, model intelligence, or the largest model your device can run.
         </p>
       </section>
-      <section>
+      <section id="models">
         <h2>Models and inputs</h2>
         <dl className="model-definitions">
           <div>
@@ -100,18 +100,27 @@ export function Methodology() {
           do not represent GPU memory capacity.
         </p>
         <details className="detail-section">
-          <summary>Benchmark inputs</summary>
+          <summary>Test prompt</summary>
           <div className="details-content">
-            <pre className="benchmark-input">{PROMPT}</pre>
-            <ol className="list-decimal space-y-3 pl-5">
-              {DOCUMENTS.map((document) => (
-                <li key={document}>{document}</li>
-              ))}
-            </ol>
+            <div>
+              <pre className="benchmark-input">{PROMPT_PARAGRAPH}</pre>
+              <p className="detail-caption">
+                The benchmark repeats this paragraph eight times to reach the
+                fixed prompt length.
+              </p>
+            </div>
+            <div>
+              <h3 className="detail-sublabel">Embedding documents</h3>
+              <ol className="list-decimal space-y-3 pl-5">
+                {DOCUMENTS.map((document) => (
+                  <li key={document}>{document}</li>
+                ))}
+              </ol>
+            </div>
           </div>
         </details>
       </section>
-      <section>
+      <section id="sources">
         <h2>Sources</h2>
         <ul className="source-links">
           <li>
