@@ -32,7 +32,7 @@ export function pageMetadata(
           url: "/brand/og-image.png",
           width: 1200,
           height: 630,
-          alt: "AI Speedtest: How fast is your computer at AI? Local WebGPU benchmark.",
+          alt: "AI Speedtest: How fast is your PC at AI?",
         },
       ],
     },
